@@ -12,8 +12,36 @@ spec:
     spec:
       containers:
         - name: web
-          image: s09s12-app:latest # intentionally 'latest'
+          # фиксируем тег вместо latest
+          image: s09s12-app:v1.1
+          imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8080 }]
+          # non-root и минимизация привилегий
           securityContext:
-            runAsUser: 0            # intentionally root
-          resources: {}             # no limits/requests
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          # базовые лимиты
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          # пробы на существующий эндпоинт /healthz
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3

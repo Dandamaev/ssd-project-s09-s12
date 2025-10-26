@@ -7,3 +7,10 @@ services:
     environment:
       - APP_HOST=0.0.0.0
       - APP_PORT=8080
+    # образ уже запускается от USER appuser (uid 1000)
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
